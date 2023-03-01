@@ -26,11 +26,10 @@ def get_todos():
     
     q = Todo.query
 
-    args = request.args.items()
-    
-    if args is not None:
-        for k, v in request.args.items():
-            q.filter(k==v)
+    args = request.args.to_dict()
+
+    for k,v in args.items():
+        q = q.filter(f"{k}=={v}")
 
     todos = q.all()
 
