@@ -23,8 +23,17 @@ def health():
 
 @api.route('/todos', methods=['GET'])
 def get_todos():
-    """Return the list of todo items"""
-    todos = Todo.query.all()
+    
+    q = Todo.query
+
+    args = request.args.items()
+    
+    if args is not None:
+        for k, v in request.args.items():
+            q.filter(k==v)
+
+    todos = q.all()
+
     result = []
     for todo in todos:
         result.append(todo.to_dict())
@@ -32,6 +41,8 @@ def get_todos():
 
 @api.route('/todos/<int:todo_id>', methods=['GET'])
 def get_todo(todo_id):
+
+    
     todo = Todo.query.get(todo_id)
     if todo is None:
         return jsonify({'error': 'Todo not found'}), 404
@@ -39,6 +50,11 @@ def get_todo(todo_id):
 
 @api.route('/todos', methods=['POST'])
 def create_todo():
+
+    for key in request.json.keys():
+        if key not in ['title', 'description', 'completed', 'deadline_at']:
+            return jsonify({'error': 'Extra field'}), 400
+
     """Create a new todo item and return the created item"""
     todo = Todo(
     title=request.json.get('title'),
@@ -59,6 +75,10 @@ def update_todo(todo_id):
     todo = Todo.query.get(todo_id)
     if todo is None:
         return jsonify({'error': 'Todo not found'}), 404
+
+    for key in request.json.keys():
+        if key not in ['title', 'description', 'completed', 'deadline_at']:
+            return jsonify({'error': 'Extra field'}), 400
 
     todo.title = request.json.get('title', todo.title)
     todo.description = request.json.get('description', todo.description)
